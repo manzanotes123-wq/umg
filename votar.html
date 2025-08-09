@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Votación Señorita UMG</title>
+  <link rel="stylesheet" href="estilo.css" />
+  <style>
+    .page { min-height: 100vh; display:flex; justify-content:center; padding:30px 16px; background:#f7f5ff; }
+    .wrap { width:100%; max-width:900px; background:#fff; border-radius:14px; padding:24px; box-shadow:0 10px 25px rgba(109,40,217,.08); border:1px solid #ddd6fe; }
+    h1 { margin:0 0 10px 0; color:#6d28d9; }
+    .subtitle { color:#6b7280; margin:0 0 20px 0; }
+
+    .card { border:1px solid #e5e7eb; border-radius:12px; padding:16px; background:#fafafa; margin-bottom:16px; }
+
+    /* Opciones (las genera votar.js) */
+    form label.opcion {
+      display:grid; grid-template-columns:auto 72px 1fr; align-items:center; gap:12px;
+      padding:12px; margin:10px 0; border-radius:12px; border:1px solid #e5e7eb; background:#fff;
+      cursor:pointer; transition:border-color .2s ease, box-shadow .2s ease;
+    }
+    form label.opcion:hover { border-color:#c4b5fd; box-shadow:0 2px 8px rgba(109,40,217,.08); }
+    form input[type="radio"] { transform: scale(1.15); }
+    .foto { width:72px; height:72px; object-fit:cover; border-radius:10px; border:1px solid #e5e7eb; }
+    .ops strong { color:#111827; } .ops em { color:#6b7280; font-style:normal; }
+
+    /* Botones */
+    .toolbar { display:flex; gap:10px; margin-top:12px; }
+    .btn { width:100%; background:#8b5cf6; color:#fff; border:none; border-radius:10px; padding:12px; font-size:1rem; cursor:pointer; }
+    .btn:hover { background:#7c3aed; }
+    .btn-secondary { background:#ede9fe; color:#6d28d9; }
+    .btn-secondary:hover { background:#ddd6fe; }
+
+    /* Barra de progreso */
+    .progress-wrap { margin-top:12px; }
+    .progress-bar {
+      position: relative;
+      width: 100%;
+      height: 10px;
+      background: #ede9fe;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid #ddd6fe;
+    }
+    #progress-fill {
+      display:block;
+      height: 100%;
+      width: 0%;
+      background: #8b5cf6;
+      transition: width .35s ease;
+    }
+    .progress-text {
+      margin-top: 8px;
+      font-size: .95rem;
+      color: #6b7280;
+      text-align: right;
+    }
+
+    /* Gráfica */
+    #chartCanvas { width:100% !important; height:auto !important; }
+
+    /* Botón Finalizar oculto al inicio */
+    #finalizarBtn { display:none; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="votar.js" defer></script>
+</head>
+<body>
+  <main class="page">
+    <div class="wrap">
+      <h1>🗳️ Votación Señorita UMG</h1>
+      <p class="subtitle">Vota en cada categoría. Al terminar, presiona <b>Finalizar votación</b> para ver el resultado.</p>
+
+      <section class="card">
+        <div id="categoria-container"></div>
+        <div class="toolbar">
+          <button class="btn-secondary" type="button" onclick="location.href='index.html'">⬅️ Volver al menú</button>
+          <button id="finalizarBtn" class="btn" type="button" onclick="finalizarVotacion()">✅ Finalizar votación</button>
+        </div>
+
+        <!-- Barra de progreso -->
+        <div class="progress-wrap">
+          <div class="progress-bar">
+            <span id="progress-fill"></span>
+          </div>
+          <div id="progress-text" class="progress-text">0% completado</div>
+        </div>
+      </section>
+
+      <section class="card">
+        <canvas id="chartCanvas" width="700" height="360"></canvas>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
+
+

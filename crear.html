@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crear Encuesta - Señorita UMG</title>
+  <!-- OJO: el archivo correcto es estilo.css (no "estilos.css") -->
+  <link rel="stylesheet" href="estilo.css" />
+  <style>
+    /* Ajustes puntuales para esta página, reutiliza la paleta del index */
+    .subtle {
+      color: #6b7280;
+      font-size: 0.95rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .btn-secondary {
+      background-color: #ede9fe;
+      color: #6d28d9;
+    }
+
+    .btn-secondary:hover {
+      background-color: #ddd6fe;
+    }
+
+    .card {
+      border: 1px solid #ddd6fe;
+      border-radius: 10px;
+      padding: 12px;
+      background: #fafafa;
+    }
+
+    .candidata-card {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 10px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    .candidata-card img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .footer-hint {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 0.9rem;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>➕ Crear Encuesta Señorita UMG</h1>
+
+    <div class="card">
+      <label for="titulo">Título de la encuesta</label>
+      <input type="text" id="titulo" placeholder="Señorita UMG 2025" />
+
+      <label for="categorias">Categorías <span class="subtle">(separa con comas, ej.: Carisma, Pasarela, Traje Típico)</span></label>
+      <input type="text" id="categorias" placeholder="Carisma, Pasarela, Traje Típico" />
+    </div>
+
+    <h2>Candidatas</h2>
+    <div class="card">
+      <div class="grid-3">
+        <div>
+          <label for="nombre">Nombre completo</label>
+          <input type="text" id="nombre" placeholder="Nombre y Apellido" />
+        </div>
+        <div>
+          <label for="carrera">Carrera</label>
+          <input type="text" id="carrera" placeholder="Ingeniería, Derecho, etc." />
+        </div>
+        <div>
+          <label for="fotoUrl">URL de la foto</label>
+          <input type="text" id="fotoUrl" placeholder="https://... (Drive/Imgur)" />
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button onclick="agregarCandidata()">Agregar candidata</button>
+        <button class="btn-secondary" type="button" onclick="limpiarCampos()">Limpiar campos</button>
+      </div>
+    </div>
+
+    <div id="listaCandidatas" class="card">
+      <h3 style="margin-top:0">Candidatas añadidas <span id="contadorCandidatas" class="subtle">(0)</span></h3>
+      <!-- Las tarjetas se insertan dinámicamente -->
+    </div>
+
+    <button onclick="guardarEncuesta()">Guardar encuesta</button>
+    <div class="toolbar" style="justify-content:center">
+      <button class="btn-secondary" type="button" onclick="location.href='index.html'">⬅️ Volver al menú</button>
+    </div>
+
+    <p class="footer-hint">Al guardar, se generará un ID y un enlace para compartir la votación.</p>
+  </div>
+
+  <script src="crear.js"></script>
+  <script>
+    // Helpers opcionales para mejorar UX sin romper crear.js
+    function limpiarCampos() {
+      document.getElementById('nombre').value = '';
+      document.getElementById('carrera').value = '';
+      document.getElementById('fotoUrl').value = '';
+      document.getElementById('nombre').focus();
+    }
+
+    // Decorar la lista de candidatas ya existente en crear.js
+    const _mostrarCandidatasOriginal = window.mostrarCandidatas;
+    if (typeof _mostrarCandidatasOriginal === 'function') {
+      window.mostrarCandidatas = function() {
+        _mostrarCandidatasOriginal();
+        // Contador
+        const contenedor = document.getElementById('listaCandidatas');
+        const total = (window.candidatas || []).length || 0;
+        const contador = document.getElementById('contadorCandidatas');
+        if (contador) contador.textContent = `(${total})`;
+
+        // Mejorar el estilo de cada item ya generado por crear.js
+        // (Convierte los bloques en tarjetas bonitas si no traen clase)
+        [...contenedor.querySelectorAll('div')].forEach(div => {
+          if (!div.classList.contains('candidata-card') && div.querySelector('strong')) {
+            div.classList.add('candidata-card');
+          }
+        });
+      }
+    }
+  </script>
+</body>
+</html>

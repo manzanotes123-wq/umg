@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel de Administrador - Señorita UMG</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; }
+    .encuesta {
+      border: 1px solid #ccc;
+      margin: 10px auto;
+      padding: 10px;
+      border-radius: 10px;
+      width: 90%;
+    }
+    .links a {
+      margin: 0 10px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <h1>Panel de Administrador</h1>
+  <div id="listaEncuestas"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <script src="firebaseconfig.js"></script>
+  <script>
+    const contenedor = document.getElementById("listaEncuestas");
+
+    db.collection("encuestas").get().then(snapshot => {
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const div = document.createElement("div");
+        div.classList.add("encuesta");
+
+        div.innerHTML = `
+          <h3>${data.titulo}</h3>
+          <div class="links">
+            <a href="votar.html?id=${doc.id}" target="_blank">🗳️ Ir a Votar</a>
+            <a href="resultados.html?id=${doc.id}" target="_blank">📊 Ver Resultados</a>
+          </div>
+        `;
+
+        contenedor.appendChild(div);
+      });
+    });
+  </script>
+</body>
+</html>

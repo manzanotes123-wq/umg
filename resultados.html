@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Resultados - Señorita UMG</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    body { font-family: Arial, sans-serif; background:#f7f5ff; margin:0; }
+    .wrap {
+      max-width: 900px; margin: 30px auto; background:#fff; padding: 24px;
+      border-radius: 14px; box-shadow: 0 10px 25px rgba(109,40,217,.08);
+      border:1px solid #ddd6fe;
+    }
+    h1 { margin:0 0 8px 0; color:#6d28d9; }
+    .meta { color:#6b7280; margin:0 0 18px 0; }
+    .id-line { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .id-badge {
+      background:#ede9fe; color:#6d28d9; border:1px solid #ddd6fe;
+      border-radius:8px; padding:6px 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .btn {
+      background:#8b5cf6; color:#fff; border:none; border-radius:8px;
+      padding:8px 12px; cursor:pointer;
+    }
+    .btn:hover { background:#7c3aed; }
+    .ganadora {
+      font-size: 1.1rem; color: #065f46; background:#ecfdf5; border:1px solid #a7f3d0;
+      padding:10px 12px; border-radius:10px; margin:14px 0;
+    }
+    .card { border:1px solid #e5e7eb; border-radius:12px; padding:16px; background:#fafafa; margin-top:16px; }
+    canvas { width: 100% !important; height: auto !important; }
+  </style>
+
+  <!-- Usa Firebase v8 (compatibles con tu firebaseconfig.js actual) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <!-- Tu config (usa firebase.initializeApp...) -->
+  <script src="firebaseconfig.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <h1 id="tituloEncuesta">Resultados de la Votación</h1>
+    <p class="meta">Resumen de votos totales por candidata.</p>
+
+    <div class="id-line">
+      <span class="id-badge">ID: <span id="encuestaIdText">—</span></span>
+      <button class="btn" id="copiarIdBtn">📋 Copiar ID</button>
+    </div>
+
+    <div id="ganadora" class="ganadora" style="display:none;"></div>
+
+    <div class="card">
+      <canvas id="graficaFinal" width="700" height="360"></canvas>
+    </div>
+  </div>
+
+  <script src="resultados.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Menú Principal - Señorita UMG</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f9f9f9;
+      padding: 50px;
+    }
+    h1 {
+      font-size: 2em;
+      color: #8a2be2;
+    }
+    button {
+      margin: 20px;
+      padding: 15px 30px;
+      font-size: 1em;
+      border-radius: 10px;
+      border: none;
+      background-color: #8a2be2;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #6a1bd1;
+    }
+    input {
+      padding: 10px;
+      width: 250px;
+      margin-top: 10px;
+      font-size: 1em;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎓 Votación Señorita UMG</h1>
+
+  <div>
+    <button onclick="location.href='crear.html'">➕ Crear nueva encuesta</button><br>
+
+    <h3>🗳️ Votar</h3>
+    <input type="text" id="idVotacion" placeholder="Ingrese el ID de la encuesta"><br>
+    <button onclick="irAVotar()">Entrar a votar</button>
+
+    <h3>📊 Ver resultados</h3>
+    <input type="text" id="idResultados" placeholder="Ingrese el ID de la encuesta"><br>
+    <button onclick="verResultados()">Ver resultados</button>
+
+    <hr>
+    <button onclick="location.href='admin.html'">🔐 Panel de administrador</button>
+  </div>
+
+  <script>
+    function irAVotar() {
+      const id = document.getElementById("idVotacion").value.trim();
+      if (id) {
+        window.location.href = `votar.html?id=${id}`;
+      } else {
+        alert("Por favor ingrese un ID válido.");
+      }
+    }
+
+    function verResultados() {
+      const id = document.getElementById("idResultados").value.trim();
+      if (id) {
+        window.location.href = `resultados.html?id=${id}`;
+      } else {
+        alert("Por favor ingrese un ID válido.");
+      }
+    }
+  </script>
+
+</body>
+</html>

@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Crear Encuesta - Señorita UMG</title>
   <!-- OJO: el archivo correcto es estilo.css (no "estilos.css") -->
-  <link rel="stylesheet" href="estilo.css" />
+<link rel="stylesheet" href="estilo.css?v=3">
+
   <style>
     /* Ajustes puntuales para esta página, reutiliza la paleta del index */
     .subtle {
@@ -123,7 +124,15 @@
     <p class="footer-hint">Al guardar, se generará un ID y un enlace para compartir la votación.</p>
   </div>
 
+  <!-- Firebase v8 (coincide con firebaseconfig.js) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <!-- Tu configuración e inicialización (debe definir: firebase.initializeApp(...) y const db = firebase.firestore()) -->
+  <script src="firebaseconfig.js"></script>
+
+  <!-- Script principal para crear la encuesta (guarda en Firestore y genera link) -->
   <script src="crear.js"></script>
+
   <script>
     // Helpers opcionales para mejorar UX sin romper crear.js
     function limpiarCampos() {

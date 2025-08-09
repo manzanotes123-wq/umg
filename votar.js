@@ -1,58 +1,58 @@
+// ===== votar.js (Firebase v8 + Firestore) =====
 let encuesta;
-let votos = {};
-let votosTotales = {};
-let categoriaActual = 0;        // índice de categoría actual (0..N-1)
+let categoriaActual = 0;
 let categoriasCompletadas = false;
+let docRef; // /encuestas/{id}
 
-window.onload = () => {
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get("id");
+function getParam(name) {
+  const u = new URL(location.href);
+  return u.searchParams.get(name);
+}
+
+window.onload = async () => {
+  const id = getParam("id");
   if (!id) return alert("ID no encontrado en la URL");
 
-  const datos = localStorage.getItem("encuesta_" + id);
-  if (!datos) return alert("Encuesta no encontrada con ese ID");
+  // Referencia al documento de la encuesta
+  docRef = db.collection("encuestas").doc(id);
 
   try {
-    encuesta = JSON.parse(datos);
+    const snap = await docRef.get();
+    if (!snap.exists) return alert("Encuesta no encontrada con ese ID");
+
+    encuesta = snap.data();
     if (!encuesta.categorias || !encuesta.candidatas) {
       console.log(encuesta);
       return alert("Encuesta sin datos válidos.");
     }
 
-    inicializarVotos();
-    actualizarProgreso();   // mostrar 0% al inicio
+    inicializarProgreso();
     mostrarCategoria();
   } catch (e) {
-    console.error("Error al parsear la encuesta:", e);
-    alert("Datos corruptos.");
+    console.error("Error cargando la encuesta:", e);
+    alert("No se pudo cargar la encuesta.");
   }
 };
 
-function inicializarVotos() {
-  encuesta.categorias.forEach(cat => {
-    votos[cat] = {};
-    encuesta.candidatas.forEach(c => {
-      votos[cat][c.nombre] = 0;
-    });
-  });
-
-  encuesta.candidatas.forEach(c => {
-    votosTotales[c.nombre] = 0;
-  });
+// --- Progreso ---
+function inicializarProgreso() {
+  const fill = document.getElementById("progress-fill");
+  const text = document.getElementById("progress-text");
+  if (fill) fill.style.width = "0%";
+  if (text) text.textContent = "0% completado";
 }
 
 function actualizarProgreso() {
   const total = encuesta.categorias.length;
-  // categorías ya completadas = categoriaActual (antes de mostrar la siguiente)
   const completadas = Math.min(categoriaActual, total);
   const pct = Math.round((completadas / total) * 100);
-
   const fill = document.getElementById("progress-fill");
   const text = document.getElementById("progress-text");
   if (fill) fill.style.width = pct + "%";
   if (text) text.textContent = `${pct}% completado`;
 }
 
+// --- UI de votación por categoría ---
 function mostrarCategoria() {
   const contenedor = document.getElementById("categoria-container");
   contenedor.innerHTML = "";
@@ -81,34 +81,26 @@ function mostrarCategoria() {
     const boton = document.createElement("button");
     boton.className = "btn";
     boton.textContent = "Votar";
-    boton.onclick = (e) => {
+    boton.onclick = async (e) => {
       e.preventDefault();
       const seleccion = form.querySelector("input[name='voto']:checked");
       if (!seleccion) return;
 
       const nombre = seleccion.value;
-      const cat = encuesta.categorias[categoriaActual];
-      votos[cat][nombre]++;
-      votosTotales[nombre]++;
-      mostrarGraficaCategoria(cat);
+      await registrarVoto(cat, nombre);
 
-      // Avanzar categoría y actualizar progreso
       categoriaActual++;
       actualizarProgreso();
 
       if (categoriaActual >= encuesta.categorias.length) {
         categoriasCompletadas = true;
-        // Mensaje final y mostrar botón Finalizar
         contenedor.innerHTML = `
           <h2>¡Listo!</h2>
-          <p>Ya votaste en todas las categorías. Revisa la gráfica y presiona <b>Finalizar votación</b> para ver el resultado final.</p>
+          <p>Ya votaste en todas las categorías. Presiona <b>Finalizar votación</b> para ver el resultado final.</p>
         `;
         if (btnFinalizar) btnFinalizar.style.display = "inline-block";
-
-        // Asegurar 100% de progreso
         actualizarProgreso();
       } else {
-        // Avanza a la siguiente categoría
         setTimeout(mostrarCategoria, 600);
       }
     };
@@ -116,90 +108,95 @@ function mostrarCategoria() {
     form.appendChild(boton);
     contenedor.appendChild(form);
 
-    // Oculta el botón Finalizar mientras no se complete todo
     if (btnFinalizar) btnFinalizar.style.display = "none";
   } else {
-    // Si se recarga en este estado
     categoriasCompletadas = true;
     if (btnFinalizar) btnFinalizar.style.display = "inline-block";
     actualizarProgreso();
   }
 }
 
-function mostrarGraficaCategoria(cat) {
-  const ctx = document.getElementById("chartCanvas").getContext("2d");
-  if (window.miGrafica) window.miGrafica.destroy();
+// --- Evitar doble voto por dispositivo/categoría (sin login) ---
+function yaVoto(idEncuesta, cat) {
+  return localStorage.getItem(`votado_${idEncuesta}_${cat}`) === "1";
+}
+function marcarVoto(idEncuesta, cat) {
+  localStorage.setItem(`votado_${idEncuesta}_${cat}`, "1");
+}
 
-  window.miGrafica = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: encuesta.candidatas.map(c => c.nombre),
-      datasets: [{
-        label: `Votos - ${cat}`,
-        data: encuesta.candidatas.map(c => votos[cat][c.nombre]),
-        backgroundColor: "rgba(124, 58, 237, 0.6)"
-      }]
-    },
-    options: {
-      plugins: {
-        title: { display: true, text: `Resultados de ${cat}` },
-        legend: { display: false }
+// --- Guardar voto en Firestore ---
+async function registrarVoto(cat, nombre) {
+  const id = getParam("id");
+  if (yaVoto(id, cat)) {
+    alert("Ya votaste en esta categoría en este dispositivo.");
+    return;
+  }
+
+  const campo = `votos_${cat.replace(/\s+/g, "_")}`; // p.ej.: votos_Pasarela
+
+  try {
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(docRef);
+      const data = snap.exists ? snap.data() : {};
+      const mapa = Object.assign({}, data[campo] || {}); // { "Nombre candidata": conteo }
+      mapa[nombre] = (Number(mapa[nombre]) || 0) + 1;
+      tx.set(docRef, { [campo]: mapa }, { merge: true });
+    });
+
+    marcarVoto(id, cat);
+    // Mostrar la gráfica de la categoría con los datos actualizados del servidor
+    await mostrarGraficaCategoria(cat);
+
+  } catch (e) {
+    console.error("Error registrando voto:", e);
+    alert("No se pudo registrar tu voto. Intenta de nuevo.");
+  }
+}
+
+// --- Gráfica por categoría (lee totales actuales de Firestore) ---
+async function mostrarGraficaCategoria(cat) {
+  try {
+    const snap = await docRef.get();
+    const data = snap.data() || {};
+    const campo = `votos_${cat.replace(/\s+/g, "_")}`;
+    const mapa = data[campo] || {}; // { nombre: conteo }
+
+    const labels = encuesta.candidatas.map(c => c.nombre);
+    const valores = labels.map(n => Number(mapa[n] || 0));
+
+    const ctx = document.getElementById("chartCanvas").getContext("2d");
+    if (window.miGrafica) window.miGrafica.destroy();
+
+    window.miGrafica = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: `Votos - ${cat}`,
+          data: valores,
+          backgroundColor: "rgba(124, 58, 237, 0.6)"
+        }]
       },
-      responsive: true,
-      maintainAspectRatio: false
-    }
-  });
+      options: {
+        plugins: {
+          title: { display: true, text: `Resultados de ${cat}` },
+          legend: { display: false }
+        },
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    });
+  } catch (e) {
+    console.error("No se pudo actualizar la gráfica:", e);
+  }
 }
 
-function mostrarGraficaFinal() {
-  const ctx = document.getElementById("chartCanvas").getContext("2d");
-  if (window.miGrafica) window.miGrafica.destroy();
-
-  const ordenados = Object.entries(votosTotales).sort((a, b) => b[1] - a[1]);
-  const labels = ordenados.map(([nombre]) => nombre);
-  const data = ordenados.map(([_, cantidad]) => cantidad);
-
-  const colores = ordenados.map((_, i) => {
-    if (i === 0) return "gold";
-    if (i === 1) return "dodgerblue";
-    if (i === 2) return "peru";
-    return "gray";
-  });
-
-  const labelsConCarrera = ordenados.map(([nombre], i) => {
-    const candidata = encuesta.candidatas.find(c => c.nombre === nombre);
-    let etiqueta = `${nombre} (${candidata.carrera})`;
-    if (i === 0) etiqueta = `👑 Señorita UMG - ${etiqueta}`;
-    return etiqueta;
-  });
-
-  window.miGrafica = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: labelsConCarrera,
-      datasets: [{
-        label: "Votos Totales",
-        data,
-        backgroundColor: colores
-      }]
-    },
-    options: {
-      plugins: { title: { display: true, text: "Resultado Final" }, legend: { display: false } },
-      responsive: true,
-      maintainAspectRatio: false
-    }
-  });
-
-  // Limpiar formulario al final
-  const cont = document.getElementById("categoria-container");
-  if (cont) cont.innerHTML = "";
-}
-
+// --- Finalizar (redirige a página de resultados globales) ---
 function finalizarVotacion() {
   if (!categoriasCompletadas) {
     alert("Primero vota en todas las categorías.");
     return;
   }
-  mostrarGraficaFinal();
+  const id = getParam("id");
+  location.href = `resultados.html?id=${id}`;
 }
-

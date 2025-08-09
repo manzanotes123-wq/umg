@@ -62,7 +62,17 @@
     /* Botón Finalizar oculto al inicio */
     #finalizarBtn { display:none; }
   </style>
+
+  <!-- Firebase v8 (debe cargar ANTES de votar.js) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <!-- Tu configuración: inicializa firebase e instancia `db` -->
+  <script src="firebaseconfig.js"></script>
+
+  <!-- Librería de gráficos -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Lógica de votación (usa `db` de firebaseconfig.js) -->
   <script src="votar.js" defer></script>
 </head>
 <body>
@@ -94,5 +104,3 @@
   </main>
 </body>
 </html>
-
-
